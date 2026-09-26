@@ -1,6 +1,7 @@
 ﻿using Identity.API.Contracts.Requests;
 using Identity.API.Contracts.Responses;
 using Identity.Application.Features.Users.Commands.Register;
+using Identity.Application.Features.Users.Queries.GetUserById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,5 +39,21 @@ public class UsersController : ControllerBase
             result.LastName!,
             result.State!.Value.ToString());
         return CreatedAtAction(nameof(Register), new { id = response.Id }, response);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<UserResponse>> GetById(
+    Guid id,
+    CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new GetUserByIdQuery(id), cancellationToken);
+        if (!result.Found)
+            return NotFound();
+        return Ok(new UserResponse(
+            result.Id!.Value,
+            result.Email!,
+            result.FirstName!,
+            result.LastName!,
+            result.State!.Value.ToString()));
     }
 }

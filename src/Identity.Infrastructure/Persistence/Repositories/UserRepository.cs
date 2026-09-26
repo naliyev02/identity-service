@@ -17,4 +17,7 @@ public sealed class UserRepository : IUserRepository
             u => u.Email.Value.ToLower() == normalized,
             cancellationToken);
     }
+
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    => _db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 }
