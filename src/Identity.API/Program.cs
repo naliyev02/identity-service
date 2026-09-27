@@ -1,6 +1,5 @@
 using Identity.API.Middleware;
 using Identity.Application;
-using Identity.Domain.User.Exceptions;
 using Identity.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);

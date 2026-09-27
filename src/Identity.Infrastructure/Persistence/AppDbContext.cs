@@ -6,15 +6,19 @@ namespace Identity.Infrastructure.Persistence;
 
 public sealed class AppDbContext : DbContext, IUnitOfWork
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
+
     public DbSet<User> Users => Set<User>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("identity");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 
     Task IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken)
-    {
-        return SaveChangesAsync(cancellationToken);
-    }
+        => SaveChangesAsync(cancellationToken);
 }

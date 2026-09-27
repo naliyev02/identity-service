@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Identity.Application.Options;
+using Identity.Application.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Identity.Application;
 
@@ -8,6 +10,8 @@ public static class DependencyInjection
     {
         services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
+        services.AddScoped<EmailVerificationIssuer>();
+        services.AddOptions<AppOptions>().BindConfiguration(AppOptions.SectionName);
         return services;
     }
 }
