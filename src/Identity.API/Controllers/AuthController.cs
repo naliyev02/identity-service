@@ -2,6 +2,7 @@ using Identity.API.Contracts.Requests;
 using Identity.API.Contracts.Responses;
 using Identity.API.Cookies;
 using Identity.API.Extensions;
+using Identity.Application.Features.Authentication.Commands.ChangePassword;
 using Identity.Application.Features.Authentication.Commands.ForgotPassword;
 using Identity.Application.Features.Authentication.Commands.Login;
 using Identity.Application.Features.Authentication.Commands.Logout;
@@ -46,6 +47,31 @@ public class AuthController : ControllerBase
             result.FirstName!,
             result.LastName!,
             result.State!.Value.ToString()));
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var result = await _sender.Send(
+            new ChangePasswordCommand(userId, request.CurrentPassword, request.NewPassword),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            if (result.ErrorCode == "IncorrectPassword")
+                return BadRequest(new { error = result.ErrorCode });
+
+            return NotFound();
+        }
+
+        DeleteRefreshCookie();
+        return NoContent();
     }
 
     [HttpPost("login")]
