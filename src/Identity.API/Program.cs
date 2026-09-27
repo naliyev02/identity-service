@@ -1,3 +1,4 @@
+using Identity.API.Extensions;
 using Identity.API.Middleware;
 using Identity.Application;
 using Identity.Infrastructure;
@@ -8,7 +9,8 @@ builder.Services.AddExceptionHandler<ExceptionHandler>();
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerWithJwt();
+builder.Services.AddApiAuthentication(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -24,6 +26,9 @@ else
 {
     app.UseHttpsRedirection();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

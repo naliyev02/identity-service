@@ -1,12 +1,15 @@
 using Identity.API.Contracts.Requests;
 using Identity.API.Contracts.Responses;
 using Identity.API.Cookies;
+using Identity.API.Extensions;
 using Identity.Application.Features.Authentication.Commands.Login;
 using Identity.Application.Features.Authentication.Commands.Logout;
 using Identity.Application.Features.Authentication.Commands.RefreshToken;
 using Identity.Application.Features.Authentication.Commands.ResendVerification;
 using Identity.Application.Features.Authentication.Commands.VerifyEmail;
+using Identity.Application.Features.Authentication.Queries.GetMe;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.API.Controllers;
@@ -22,6 +25,25 @@ public class AuthController : ControllerBase
     {
         _sender = sender;
         _environment = environment;
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<UserResponse>> Me(CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var result = await _sender.Send(new GetMeQuery(userId), cancellationToken);
+        if (!result.Found)
+            return NotFound();
+
+        return Ok(new UserResponse(
+            result.Id!.Value,
+            result.Email!,
+            result.FirstName!,
+            result.LastName!,
+            result.State!.Value.ToString()));
     }
 
     [HttpPost("login")]
