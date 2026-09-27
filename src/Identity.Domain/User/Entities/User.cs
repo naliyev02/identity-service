@@ -51,4 +51,12 @@ public class User : BaseEntity, IAggregateRoot
 
         return true;
     }
+
+    public void ChangePassword(Password password)
+    {
+        Password = password;
+        FailedLoginAttempts = 0;
+        LockoutEndUtc = null;
+        SetUpdatedAt();
+    }
 }

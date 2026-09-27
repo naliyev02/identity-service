@@ -2,10 +2,12 @@ using Identity.API.Contracts.Requests;
 using Identity.API.Contracts.Responses;
 using Identity.API.Cookies;
 using Identity.API.Extensions;
+using Identity.Application.Features.Authentication.Commands.ForgotPassword;
 using Identity.Application.Features.Authentication.Commands.Login;
 using Identity.Application.Features.Authentication.Commands.Logout;
 using Identity.Application.Features.Authentication.Commands.RefreshToken;
 using Identity.Application.Features.Authentication.Commands.ResendVerification;
+using Identity.Application.Features.Authentication.Commands.ResetPassword;
 using Identity.Application.Features.Authentication.Commands.VerifyEmail;
 using Identity.Application.Features.Authentication.Queries.GetMe;
 using MediatR;
@@ -115,6 +117,26 @@ public class AuthController : ControllerBase
     {
         await _sender.Send(new ResendVerificationCommand(request.Email), cancellationToken);
         return Accepted();
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _sender.Send(new ForgotPasswordCommand(request.Email), cancellationToken);
+        return Accepted();
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _sender.Send(
+            new ResetPasswordCommand(request.Token, request.NewPassword),
+            cancellationToken);
+        return NoContent();
     }
 
     private void AppendRefreshCookie(string refreshToken, DateTime expiresAtUtc)
