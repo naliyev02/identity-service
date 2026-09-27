@@ -11,7 +11,9 @@ public static class DependencyInjection
         services.AddMediatR(cfg =>
             cfg.RegisterServicesFromAssembly(typeof(DependencyInjection).Assembly));
         services.AddScoped<EmailVerificationIssuer>();
+        services.AddScoped<SessionIssuer>();
         services.AddOptions<AppOptions>().BindConfiguration(AppOptions.SectionName);
+        services.AddOptions<JwtOptions>().BindConfiguration(JwtOptions.SectionName);
         return services;
     }
 }
