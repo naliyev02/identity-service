@@ -1,6 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using System.Text;
+using Identity.Application.Authorization;
 using Identity.Application.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -41,7 +41,14 @@ public static class AuthenticationExtensions
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            foreach (var permission in AccessPolicies.All)
+            {
+                options.AddPolicy(permission, policy =>
+                    policy.RequireClaim(AccessPolicies.PermissionClaim, permission));
+            }
+        });
         return services;
     }
 

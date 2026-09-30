@@ -1,4 +1,5 @@
 ﻿using Identity.Application.Abstractions.Persistence;
+using Identity.Application.Services;
 using MediatR;
 
 namespace Identity.Application.Features.Users.Queries.GetUserById;
@@ -19,6 +20,8 @@ public sealed class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, GetUs
             user.Email.Value,
             user.Name.FirstName,
             user.Name.LastName,
-            user.State);
+            user.State,
+            UserAccess.RoleNamesOf(user),
+            UserAccess.PermissionsOf(user));
     }
 }

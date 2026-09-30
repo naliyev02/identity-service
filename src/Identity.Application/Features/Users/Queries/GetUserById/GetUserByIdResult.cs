@@ -7,11 +7,20 @@ public sealed record GetUserByIdResult(
     string? Email,
     string? FirstName,
     string? LastName,
-    AccountState? State)
+    AccountState? State,
+    IReadOnlyList<string> Roles,
+    IReadOnlyList<string> Permissions)
 {
     public static GetUserByIdResult NotFound() =>
-        new(false, null, null, null, null, null);
+        new(false, null, null, null, null, null, [], []);
+
     public static GetUserByIdResult Success(
-        Guid id, string email, string firstName, string lastName, AccountState state) =>
-        new(true, id, email, firstName, lastName, state);
+        Guid id,
+        string email,
+        string firstName,
+        string lastName,
+        AccountState state,
+        IReadOnlyList<string> roles,
+        IReadOnlyList<string> permissions) =>
+        new(true, id, email, firstName, lastName, state, roles, permissions);
 }

@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Identity.Application.Abstractions.Security;
 using Identity.Application.Options;
+using Identity.Domain.Authorization;
 using Identity.Domain.User.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -22,12 +23,21 @@ public sealed class JwtAccessTokenIssuer : IAccessTokenIssuer
 
     public string Issue(User user, DateTime expiresAtUtc)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email.Value),
-            new Claim(JwtRegisteredClaimNames.Name, user.Name.ToString())
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Email, user.Email.Value),
+            new(JwtRegisteredClaimNames.Name, user.Name.ToString())
         };
+
+        foreach (var role in user.Roles.Select(role => role.Name).Distinct())
+            claims.Add(new Claim(IdentityClaims.Role, role));
+
+        foreach (var permission in user.Roles
+                     .SelectMany(role => role.Permissions)
+                     .Select(permission => permission.Name)
+                     .Distinct())
+            claims.Add(new Claim(IdentityClaims.Permission, permission));
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SigningKey));
         var token = new JwtSecurityToken(

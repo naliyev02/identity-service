@@ -1,4 +1,5 @@
 using Identity.Application.Abstractions.Persistence;
+using Identity.Application.Services;
 using MediatR;
 
 namespace Identity.Application.Features.Authentication.Queries.GetMe;
@@ -20,6 +21,8 @@ public sealed class GetMeHandler : IRequestHandler<GetMeQuery, GetMeResult>
             user.Email.Value,
             user.Name.FirstName,
             user.Name.LastName,
-            user.State);
+            user.State,
+            UserAccess.RoleNamesOf(user),
+            UserAccess.PermissionsOf(user));
     }
 }

@@ -46,7 +46,9 @@ public class AuthController : ControllerBase
             result.Email!,
             result.FirstName!,
             result.LastName!,
-            result.State!.Value.ToString()));
+            result.State!.Value.ToString(),
+            result.Roles,
+            result.Permissions));
     }
 
     [Authorize]

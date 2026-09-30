@@ -6,4 +6,6 @@ public sealed record UserResponse(
     string Email,
     string FirstName,
     string LastName,
-    string State);
+    string State,
+    IReadOnlyList<string> Roles,
+    IReadOnlyList<string> Permissions);

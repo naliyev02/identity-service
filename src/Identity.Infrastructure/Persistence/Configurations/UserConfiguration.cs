@@ -1,4 +1,5 @@
-﻿using Identity.Domain.User.Entities;
+﻿using Identity.Domain.Roles.Entities;
+using Identity.Domain.User.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -40,5 +41,17 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
                 .HasMaxLength(50)
                 .IsRequired();
         });
+
+        builder.HasMany(user => user.Roles)
+            .WithMany()
+            .UsingEntity<Dictionary<string, object>>(
+                "user_roles",
+                role => role.HasOne<Role>().WithMany().HasForeignKey("RoleId"),
+                user => user.HasOne<User>().WithMany().HasForeignKey("UserId"),
+                join =>
+                {
+                    join.ToTable("user_roles", "identity");
+                    join.HasKey("UserId", "RoleId");
+                });
     }
 }

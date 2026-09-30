@@ -23,6 +23,8 @@ public static class DependencyInjection
                 npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "public")));
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<ISessionRepository, SessionRepository>();
@@ -34,11 +36,12 @@ public static class DependencyInjection
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
 
         services.Configure<SmtpEmailOptions>(configuration.GetSection(SmtpEmailOptions.SectionName));
+        services.Configure<IdentitySeedOptions>(configuration.GetSection(IdentitySeedOptions.SectionName));
 
-        var smtpHost = configuration[$"{SmtpEmailOptions.SectionName}:Host"];
-        if (string.IsNullOrWhiteSpace(smtpHost))
-            services.AddSingleton<IEmailSender, LoggingEmailSender>();
-        else
+        //var smtpHost = configuration[$"{SmtpEmailOptions.SectionName}:Host"];
+        //if (string.IsNullOrWhiteSpace(smtpHost))
+        //    services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        //else
             services.AddSingleton<IEmailSender, SmtpEmailSender>();
 
         return services;

@@ -22,13 +22,21 @@ public sealed class UserRepository : IUserRepository
     }
 
     public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-        => _db.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        => UsersWithAccess().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         var normalized = email.Trim().ToLowerInvariant();
-        return _db.Users.FirstOrDefaultAsync(
+        return UsersWithAccess().FirstOrDefaultAsync(
             u => u.Email.Value.ToLower() == normalized,
             cancellationToken);
     }
+
+    public async Task<IReadOnlyList<User>> ListAsync(CancellationToken cancellationToken = default)
+        => await UsersWithAccess().OrderBy(user => user.Email.Value).ToListAsync(cancellationToken);
+
+    private IQueryable<User> UsersWithAccess()
+        => _db.Users
+            .Include(user => user.Roles)
+            .ThenInclude(role => role.Permissions);
 }
