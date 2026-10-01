@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<EmailVerificationIssuer>();
         services.AddScoped<PasswordResetIssuer>();
         services.AddScoped<SessionIssuer>();
+        services.AddScoped<CurrentSessionLocator>();
         services.AddOptions<AppOptions>().BindConfiguration(AppOptions.SectionName);
         services.AddOptions<JwtOptions>().BindConfiguration(JwtOptions.SectionName);
         return services;

@@ -21,5 +21,10 @@ public static class PermissionNames
         SessionsRevoke
     ];
 
-    public static readonly IReadOnlyList<string> UserRole = [ProfileRead];
+    public static readonly IReadOnlyList<string> UserRole =
+    [
+        ProfileRead,
+        SessionsRead,
+        SessionsRevoke
+    ];
 }
