@@ -1,5 +1,6 @@
 ﻿using Identity.API.Contracts.Requests;
 using Identity.API.Contracts.Responses;
+using Identity.API.RateLimiting;
 using Identity.Application.Authorization;
 using Identity.Application.Features.Roles.Commands.AssignRolesToUser;
 using Identity.Application.Features.Users.Commands.Register;
@@ -9,6 +10,7 @@ using Identity.Application.Features.Users.Queries.GetUsers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Identity.API.Controllers;
 
@@ -19,6 +21,7 @@ public class UsersController : ControllerBase
     private readonly ISender _sender;
     public UsersController(ISender sender) => _sender = sender;
 
+    [EnableRateLimiting(RateLimitPolicies.AccountEmail)]
     [HttpPost]
     public async Task<ActionResult<RegisterUserResponse>> Register(
         [FromBody] RegisterUserRequest request,

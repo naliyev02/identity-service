@@ -2,6 +2,7 @@ using Identity.API.Contracts.Requests;
 using Identity.API.Contracts.Responses;
 using Identity.API.Cookies;
 using Identity.API.Extensions;
+using Identity.API.RateLimiting;
 using Identity.Application.Features.Authentication.Commands.ChangePassword;
 using Identity.Application.Features.Authentication.Commands.ForgotPassword;
 using Identity.Application.Features.Authentication.Commands.Login;
@@ -14,6 +15,7 @@ using Identity.Application.Features.Authentication.Queries.GetMe;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Identity.API.Controllers;
 
@@ -76,6 +78,7 @@ public class AuthController : ControllerBase
         return NoContent();
     }
 
+    [EnableRateLimiting(RateLimitPolicies.Login)]
     [HttpPost("login")]
     public async Task<ActionResult<AccessTokenResponse>> Login(
         [FromBody] LoginRequest request,
@@ -138,6 +141,7 @@ public class AuthController : ControllerBase
             result.State.ToString()));
     }
 
+    [EnableRateLimiting(RateLimitPolicies.AccountEmail)]
     [HttpPost("resend-verification")]
     public async Task<IActionResult> ResendVerification(
         [FromBody] ResendVerificationRequest request,
@@ -147,6 +151,7 @@ public class AuthController : ControllerBase
         return Accepted();
     }
 
+    [EnableRateLimiting(RateLimitPolicies.AccountEmail)]
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword(
         [FromBody] ForgotPasswordRequest request,
