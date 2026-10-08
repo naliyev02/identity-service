@@ -11,6 +11,6 @@
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\..\..\..\src\Identity.Domain\Identity.Domain.csproj" />
+	  <ProjectReference Include="..\..\..\src\Identity.Domain\Identity.Domain.csproj" />
 	</ItemGroup>
 </Project>
