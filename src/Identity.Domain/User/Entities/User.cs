@@ -54,11 +54,37 @@ public class User : BaseEntity, IAggregateRoot
         return true;
     }
 
+    public void RegisterFailedLogin(DateTime utcNow, int attemptLimit, TimeSpan lockoutDuration)
+    {
+        if (attemptLimit < 1)
+            throw new ArgumentOutOfRangeException(nameof(attemptLimit));
+
+        if (lockoutDuration <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(lockoutDuration));
+
+        if (IsLocked(utcNow))
+            return;
+
+        FailedLoginAttempts = HasExpiredLockout(utcNow) ? 1 : FailedLoginAttempts + 1;
+        LockoutEndUtc = FailedLoginAttempts >= attemptLimit
+            ? utcNow.Add(lockoutDuration)
+            : null;
+        SetUpdatedAt();
+    }
+
+    public void ResetLockout()
+    {
+        if (FailedLoginAttempts == 0 && LockoutEndUtc is null)
+            return;
+
+        ClearLockout();
+        SetUpdatedAt();
+    }
+
     public void ChangePassword(Password password)
     {
         Password = password;
-        FailedLoginAttempts = 0;
-        LockoutEndUtc = null;
+        ClearLockout();
         SetUpdatedAt();
     }
 
@@ -78,5 +104,17 @@ public class User : BaseEntity, IAggregateRoot
 
         State = state;
         SetUpdatedAt();
+    }
+
+    private bool IsLocked(DateTime utcNow)
+        => LockoutEndUtc is not null && LockoutEndUtc > utcNow;
+
+    private bool HasExpiredLockout(DateTime utcNow)
+        => LockoutEndUtc is not null && LockoutEndUtc <= utcNow;
+
+    private void ClearLockout()
+    {
+        FailedLoginAttempts = 0;
+        LockoutEndUtc = null;
     }
 }

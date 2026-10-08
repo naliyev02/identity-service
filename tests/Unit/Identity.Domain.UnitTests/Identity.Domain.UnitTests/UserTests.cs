@@ -14,6 +14,13 @@ public sealed class UserTests
             new Password("hashed-password"),
             new FullName("testName", "testSurname"));
 
+    private static User CreateActiveUser()
+    {
+        var user = CreateUser();
+        user.VerifyEmail();
+        return user;
+    }
+
     [Fact]
     public void NewAccount_StartsPendingVerification()
     {
@@ -130,8 +137,8 @@ public sealed class UserTests
     {
         //Arrange
         var user = CreateUser();
-        var lockoutEnd = new DateTime(2026, 10, 7, 12, 0, 0, DateTimeKind.Utc);
-        LoadLockout(user, failedLoginAttempts: 3, lockoutEnd);
+        var failedAt = new DateTime(2026, 10, 7, 8, 0, 0, DateTimeKind.Utc);
+        user.RegisterFailedLogin(failedAt, attemptLimit: 1, TimeSpan.FromHours(1));
         var newPassword = new Password("new-hash");
 
         //Act
@@ -139,6 +146,89 @@ public sealed class UserTests
 
         //Assert
         Assert.Equal(newPassword, user.Password);
+        Assert.Equal(0, user.FailedLoginAttempts);
+        Assert.Null(user.LockoutEndUtc);
+    }
+
+    [Fact]
+    public void RegisterFailedLogin_IncrementsAttempts_BeforeTheLimit()
+    {
+        //Arrange
+        var user = CreateUser();
+        var failedAt = new DateTime(2026, 10, 7, 8, 0, 0, DateTimeKind.Utc);
+
+        //Act
+        user.RegisterFailedLogin(failedAt, attemptLimit: 3, TimeSpan.FromMinutes(15));
+
+        //Assert
+        Assert.Equal(1, user.FailedLoginAttempts);
+        Assert.Null(user.LockoutEndUtc);
+    }
+
+    [Fact]
+    public void RegisterFailedLogin_SetsLockout_WhenLimitIsReached()
+    {
+        //Arrange
+        var user = CreateActiveUser();
+        var failedAt = new DateTime(2026, 10, 7, 8, 0, 0, DateTimeKind.Utc);
+        var lockout = TimeSpan.FromMinutes(15);
+
+        //Act
+        user.RegisterFailedLogin(failedAt, attemptLimit: 2, lockout);
+        user.RegisterFailedLogin(failedAt, attemptLimit: 2, lockout);
+
+        //Assert
+        Assert.Equal(2, user.FailedLoginAttempts);
+        Assert.Equal(failedAt.Add(lockout), user.LockoutEndUtc);
+        Assert.False(user.CanSignIn(failedAt));
+    }
+
+    [Fact]
+    public void RegisterFailedLogin_LeavesLock_WhileItIsActive()
+    {
+        //Arrange
+        var user = CreateUser();
+        var failedAt = new DateTime(2026, 10, 7, 8, 0, 0, DateTimeKind.Utc);
+        user.RegisterFailedLogin(failedAt, attemptLimit: 1, TimeSpan.FromMinutes(15));
+
+        //Act
+        user.RegisterFailedLogin(failedAt.AddMinutes(1), attemptLimit: 1, TimeSpan.FromMinutes(15));
+
+        //Assert
+        Assert.Equal(1, user.FailedLoginAttempts);
+        Assert.Equal(failedAt.AddMinutes(15), user.LockoutEndUtc);
+    }
+
+    [Fact]
+    public void RegisterFailedLogin_StartsAgain_AfterLockoutExpires()
+    {
+        //Arrange
+        var user = CreateActiveUser();
+        var failedAt = new DateTime(2026, 10, 7, 8, 0, 0, DateTimeKind.Utc);
+        user.RegisterFailedLogin(failedAt, attemptLimit: 1, TimeSpan.FromMinutes(15));
+        var afterExpiry = failedAt.AddMinutes(15);
+
+        //Act
+        user.RegisterFailedLogin(afterExpiry, attemptLimit: 3, TimeSpan.FromMinutes(15));
+
+        //Assert
+        Assert.Equal(1, user.FailedLoginAttempts);
+        Assert.Null(user.LockoutEndUtc);
+        Assert.True(user.CanSignIn(afterExpiry));
+    }
+
+    [Fact]
+    public void ResetLockout_ClearsAttemptsAndLockout()
+    {
+        //Arrange
+        var user = CreateUser();
+        var failedAt = new DateTime(2026, 10, 7, 8, 0, 0, DateTimeKind.Utc);
+        user.RegisterFailedLogin(failedAt, attemptLimit: 1, TimeSpan.FromMinutes(15));
+
+        //Act
+        user.ResetLockout();
+
+        //Assert
         Assert.Equal(0, user.FailedLoginAttempts);
         Assert.Null(user.LockoutEndUtc);
     }
@@ -172,14 +262,4 @@ public sealed class UserTests
         //Assert
         Assert.Empty(user.Roles);
     }
-
-    // Lockout is stored on the user, but no domain command sets it yet.
-    private static void LoadLockout(User user, int failedLoginAttempts, DateTime lockoutEndUtc)
-    {
-        Set(user, nameof(User.FailedLoginAttempts), failedLoginAttempts);
-        Set(user, nameof(User.LockoutEndUtc), lockoutEndUtc);
-    }
-
-    private static void Set(User user, string propertyName, object value)
-        => typeof(User).GetProperty(propertyName)!.SetValue(user, value);
 }
